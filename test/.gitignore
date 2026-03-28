@@ -1,0 +1,7 @@
+node_modules/
+dist/
+
+# 測試截圖（僅在 bug issue 中引用，不追蹤）
+screenshots/**/*.png
+screenshots/**/*.txt
+!screenshots/.gitkeep
