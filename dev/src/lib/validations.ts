@@ -56,6 +56,26 @@ export const loginSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 
 /**
+ * Create post request validation schema.
+ *
+ * Rules:
+ * - content: 1-2000 chars after trimming, must not be empty/whitespace-only
+ */
+export const createPostSchema = z.object({
+  content: z
+    .string({ required_error: "Content is required" })
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(1, "Content must not be empty")
+        .max(2000, "Content must be at most 2000 characters")
+    ),
+});
+
+export type CreatePostInput = z.infer<typeof createPostSchema>;
+
+/**
  * Validate registration input and return parsed data or error details.
  */
 export function validateRegisterInput(data: unknown):
@@ -88,6 +108,29 @@ export function validateLoginInput(data: unknown):
       details: Array<{ field: string; message: string }>;
     } {
   const result = loginSchema.safeParse(data);
+
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const details = result.error.issues.map((issue) => ({
+    field: issue.path.join(".") || "unknown",
+    message: issue.message,
+  }));
+
+  return { success: false, details };
+}
+
+/**
+ * Validate create post input and return parsed data or error details.
+ */
+export function validateCreatePostInput(data: unknown):
+  | { success: true; data: CreatePostInput }
+  | {
+      success: false;
+      details: Array<{ field: string; message: string }>;
+    } {
+  const result = createPostSchema.safeParse(data);
 
   if (result.success) {
     return { success: true, data: result.data };
