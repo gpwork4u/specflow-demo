@@ -29,7 +29,12 @@ export async function GET(
             displayName: true,
           },
         },
-        _count: { select: { likes: true } },
+        _count: {
+          select: {
+            likes: true,
+            comments: { where: { deletedAt: null } },
+          },
+        },
         ...(currentUserId
           ? {
               likes: {
@@ -53,6 +58,7 @@ export async function GET(
     }
 
     const likesCount = post._count?.likes ?? 0;
+    const commentsCount = post._count?.comments ?? 0;
     const isLiked = currentUserId
       ? (post.likes?.some((like: { userId: string }) => like.userId === currentUserId) ?? false)
       : false;
@@ -66,7 +72,7 @@ export async function GET(
         display_name: post.author.displayName,
       },
       likes_count: likesCount,
-      comments_count: 0,
+      comments_count: commentsCount,
       is_liked: isLiked,
       created_at: post.createdAt.toISOString(),
       updated_at: post.updatedAt.toISOString(),
@@ -170,6 +176,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             displayName: true,
           },
         },
+        _count: {
+          select: {
+            likes: true,
+            comments: { where: { deletedAt: null } },
+          },
+        },
       },
     });
 
@@ -181,8 +193,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         username: updatedPost.author.username,
         display_name: updatedPost.author.displayName,
       },
-      likes_count: 0,
-      comments_count: 0,
+      likes_count: updatedPost._count.likes,
+      comments_count: updatedPost._count.comments,
       created_at: updatedPost.createdAt.toISOString(),
       updated_at: updatedPost.updatedAt.toISOString(),
     });

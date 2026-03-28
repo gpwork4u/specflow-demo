@@ -15,12 +15,13 @@ function formatPost(
     author: { id: string; username: string; displayName: string };
     createdAt: Date;
     updatedAt: Date;
-    _count?: { likes: number };
+    _count?: { likes: number; comments: number };
     likes?: { userId: string }[];
   },
   currentUserId?: string | null
 ) {
   const likesCount = post._count?.likes ?? 0;
+  const commentsCount = post._count?.comments ?? 0;
   const isLiked = currentUserId
     ? (post.likes?.some((like) => like.userId === currentUserId) ?? false)
     : false;
@@ -34,7 +35,7 @@ function formatPost(
       display_name: post.author.displayName,
     },
     likes_count: likesCount,
-    comments_count: 0,
+    comments_count: commentsCount,
     is_liked: isLiked,
     created_at: post.createdAt.toISOString(),
     updated_at: post.updatedAt.toISOString(),
@@ -105,7 +106,12 @@ export async function GET(request: NextRequest) {
       take: limit + 1,
       include: {
         author: { select: authorSelect },
-        _count: { select: { likes: true } },
+        _count: {
+          select: {
+            likes: true,
+            comments: { where: { deletedAt: null } },
+          },
+        },
         ...(currentUserId
           ? {
               likes: {
@@ -193,6 +199,12 @@ export async function POST(request: NextRequest) {
       },
       include: {
         author: { select: authorSelect },
+        _count: {
+          select: {
+            likes: true,
+            comments: { where: { deletedAt: null } },
+          },
+        },
       },
     });
 
