@@ -10,11 +10,14 @@ interface RouteParams {
  * GET /api/v1/posts/:id - Get a single post by ID (public).
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: RouteParams
 ) {
   try {
     const { id } = await params;
+
+    // Get current user ID if authenticated (optional for public endpoint)
+    const currentUserId = request.headers.get("x-user-id") || null;
 
     const post = await prisma.post.findUnique({
       where: { id },
@@ -27,8 +30,19 @@ export async function GET(
           },
         },
         _count: {
-          select: { comments: { where: { deletedAt: null } } },
+          select: {
+            likes: true,
+            comments: { where: { deletedAt: null } },
+          },
         },
+        ...(currentUserId
+          ? {
+              likes: {
+                where: { userId: currentUserId },
+                select: { userId: true },
+              },
+            }
+          : {}),
       },
     });
 
@@ -43,6 +57,12 @@ export async function GET(
       );
     }
 
+    const likesCount = post._count?.likes ?? 0;
+    const commentsCount = post._count?.comments ?? 0;
+    const isLiked = currentUserId
+      ? (post.likes?.some((like: { userId: string }) => like.userId === currentUserId) ?? false)
+      : false;
+
     return NextResponse.json({
       id: post.id,
       content: post.content,
@@ -51,9 +71,9 @@ export async function GET(
         username: post.author.username,
         display_name: post.author.displayName,
       },
-      likes_count: 0,
-      comments_count: post._count.comments,
-      is_liked: false,
+      likes_count: likesCount,
+      comments_count: commentsCount,
+      is_liked: isLiked,
       created_at: post.createdAt.toISOString(),
       updated_at: post.updatedAt.toISOString(),
     });
@@ -157,7 +177,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           },
         },
         _count: {
-          select: { comments: { where: { deletedAt: null } } },
+          select: {
+            likes: true,
+            comments: { where: { deletedAt: null } },
+          },
         },
       },
     });
@@ -170,7 +193,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         username: updatedPost.author.username,
         display_name: updatedPost.author.displayName,
       },
-      likes_count: 0,
+      likes_count: updatedPost._count.likes,
       comments_count: updatedPost._count.comments,
       created_at: updatedPost.createdAt.toISOString(),
       updated_at: updatedPost.updatedAt.toISOString(),

@@ -26,7 +26,7 @@ const MOCK_POST = {
   createdAt: new Date("2026-03-28T00:00:00.000Z"),
   updatedAt: new Date("2026-03-28T00:00:00.000Z"),
   deletedAt: null,
-  _count: { comments: 0 },
+  _count: { likes: 0, comments: 0 },
 };
 
 function buildRequest(id: string): NextRequest {
@@ -71,7 +71,7 @@ describe("GET /api/v1/posts/:id", () => {
 
       expect(mockFindUnique).toHaveBeenCalledWith({
         where: { id: "post-1" },
-        include: {
+        include: expect.objectContaining({
           author: {
             select: {
               id: true,
@@ -80,9 +80,12 @@ describe("GET /api/v1/posts/:id", () => {
             },
           },
           _count: {
-            select: { comments: { where: { deletedAt: null } } },
+            select: {
+              likes: true,
+              comments: { where: { deletedAt: null } },
+            },
           },
-        },
+        }),
       });
     });
   });

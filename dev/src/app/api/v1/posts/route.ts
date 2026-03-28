@@ -8,14 +8,24 @@ import {
 /**
  * Helper to format a post record into the API response shape.
  */
-function formatPost(post: {
-  id: string;
-  content: string;
-  author: { id: string; username: string; displayName: string };
-  createdAt: Date;
-  updatedAt: Date;
-  _count?: { comments: number };
-}) {
+function formatPost(
+  post: {
+    id: string;
+    content: string;
+    author: { id: string; username: string; displayName: string };
+    createdAt: Date;
+    updatedAt: Date;
+    _count?: { likes: number; comments: number };
+    likes?: { userId: string }[];
+  },
+  currentUserId?: string | null
+) {
+  const likesCount = post._count?.likes ?? 0;
+  const commentsCount = post._count?.comments ?? 0;
+  const isLiked = currentUserId
+    ? (post.likes?.some((like) => like.userId === currentUserId) ?? false)
+    : false;
+
   return {
     id: post.id,
     content: post.content,
@@ -24,9 +34,9 @@ function formatPost(post: {
       username: post.author.username,
       display_name: post.author.displayName,
     },
-    likes_count: 0,
-    comments_count: post._count?.comments ?? 0,
-    is_liked: false,
+    likes_count: likesCount,
+    comments_count: commentsCount,
+    is_liked: isLiked,
     created_at: post.createdAt.toISOString(),
     updated_at: post.updatedAt.toISOString(),
   };
@@ -48,6 +58,9 @@ export async function GET(request: NextRequest) {
       cursor: searchParams.get("cursor") ?? undefined,
       limit: searchParams.get("limit") ?? undefined,
     };
+
+    // Get current user ID if authenticated (optional for public endpoint)
+    const currentUserId = request.headers.get("x-user-id") || null;
 
     const validation = validateListPostsQuery(queryParams);
     if (!validation.success) {
@@ -94,8 +107,19 @@ export async function GET(request: NextRequest) {
       include: {
         author: { select: authorSelect },
         _count: {
-          select: { comments: { where: { deletedAt: null } } },
+          select: {
+            likes: true,
+            comments: { where: { deletedAt: null } },
+          },
         },
+        ...(currentUserId
+          ? {
+              likes: {
+                where: { userId: currentUserId },
+                select: { userId: true },
+              },
+            }
+          : {}),
       },
     });
 
@@ -107,7 +131,7 @@ export async function GET(request: NextRequest) {
         : null;
 
     return NextResponse.json({
-      data: resultPosts.map(formatPost),
+      data: resultPosts.map((post) => formatPost(post, currentUserId)),
       next_cursor: nextCursor,
       has_more: hasMore,
     });
@@ -176,12 +200,15 @@ export async function POST(request: NextRequest) {
       include: {
         author: { select: authorSelect },
         _count: {
-          select: { comments: { where: { deletedAt: null } } },
+          select: {
+            likes: true,
+            comments: { where: { deletedAt: null } },
+          },
         },
       },
     });
 
-    return NextResponse.json(formatPost(post), { status: 201 });
+    return NextResponse.json(formatPost(post, userId), { status: 201 });
   } catch (error) {
     console.error("Create post error:", error);
     return NextResponse.json(

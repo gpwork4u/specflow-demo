@@ -18,6 +18,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   posts    Post[]
+  likes    Like[]
   comments Comment[]
 
   @@map("users")
@@ -32,12 +33,27 @@ model Post {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  likes    Like[]
   comments Comment[]
 
   @@index([authorId], map: "idx_post_author_id")
   @@index([createdAt(sort: Desc)], map: "idx_post_created_at")
   @@index([deletedAt], map: "idx_post_deleted_at")
   @@map("posts")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  postId    String   @map("post_id")
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, postId])
+  @@index([postId], map: "idx_like_post_id")
+  @@index([userId], map: "idx_like_user_id")
+  @@map("likes")
 }
 
 model Comment {
