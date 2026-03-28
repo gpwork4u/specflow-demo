@@ -3,17 +3,26 @@ import { verifyToken } from "@/lib/auth";
 
 /**
  * Paths that do not require authentication.
+ * Exact method + path combinations are checked below.
  */
-const PUBLIC_PATHS = [
-  "/api/v1/auth/register",
-  "/api/v1/auth/login",
+const PUBLIC_PATHS: { method?: string; path: string }[] = [
+  { method: "POST", path: "/api/v1/auth/register" },
+  { method: "POST", path: "/api/v1/auth/login" },
+  { method: "GET", path: "/api/v1/posts" },
+  { method: "GET", path: "/api/v1/users" },
 ];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip auth for public paths
-  if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
+  // Skip auth for public paths (match method + path prefix)
+  const isPublic = PUBLIC_PATHS.some((route) => {
+    const pathMatch = pathname.startsWith(route.path);
+    if (!pathMatch) return false;
+    if (route.method) return request.method === route.method;
+    return true;
+  });
+  if (isPublic) {
     return NextResponse.next();
   }
 

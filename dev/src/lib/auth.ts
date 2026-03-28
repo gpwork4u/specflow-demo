@@ -42,3 +42,10 @@ export function buildTokenCookie(token: string): string {
   const maxAge = 7 * 24 * 60 * 60; // 7 days in seconds
   return `token=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${maxAge}`;
 }
+
+/**
+ * Build a Set-Cookie header value that clears the JWT token cookie.
+ */
+export function buildClearTokenCookie(): string {
+  return "token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0";
+}
