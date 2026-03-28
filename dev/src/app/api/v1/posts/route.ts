@@ -14,6 +14,7 @@ function formatPost(post: {
   author: { id: string; username: string; displayName: string };
   createdAt: Date;
   updatedAt: Date;
+  _count?: { comments: number };
 }) {
   return {
     id: post.id,
@@ -24,7 +25,7 @@ function formatPost(post: {
       display_name: post.author.displayName,
     },
     likes_count: 0,
-    comments_count: 0,
+    comments_count: post._count?.comments ?? 0,
     is_liked: false,
     created_at: post.createdAt.toISOString(),
     updated_at: post.updatedAt.toISOString(),
@@ -92,6 +93,9 @@ export async function GET(request: NextRequest) {
       take: limit + 1,
       include: {
         author: { select: authorSelect },
+        _count: {
+          select: { comments: { where: { deletedAt: null } } },
+        },
       },
     });
 
@@ -171,6 +175,9 @@ export async function POST(request: NextRequest) {
       },
       include: {
         author: { select: authorSelect },
+        _count: {
+          select: { comments: { where: { deletedAt: null } } },
+        },
       },
     });
 

@@ -17,7 +17,8 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  posts Post[]
+  posts    Post[]
+  comments Comment[]
 
   @@map("users")
 }
@@ -31,8 +32,25 @@ model Post {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  comments Comment[]
+
   @@index([authorId], map: "idx_post_author_id")
   @@index([createdAt(sort: Desc)], map: "idx_post_created_at")
   @@index([deletedAt], map: "idx_post_deleted_at")
   @@map("posts")
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  content   String    @db.Text
+  authorId  String    @map("author_id")
+  postId    String    @map("post_id")
+  author    User      @relation(fields: [authorId], references: [id])
+  post      Post      @relation(fields: [postId], references: [id])
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([postId], map: "idx_comment_post_id")
+  @@index([authorId], map: "idx_comment_author_id")
+  @@map("comments")
 }

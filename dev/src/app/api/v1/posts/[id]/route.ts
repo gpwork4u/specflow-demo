@@ -26,6 +26,9 @@ export async function GET(
             displayName: true,
           },
         },
+        _count: {
+          select: { comments: { where: { deletedAt: null } } },
+        },
       },
     });
 
@@ -49,7 +52,7 @@ export async function GET(
         display_name: post.author.displayName,
       },
       likes_count: 0,
-      comments_count: 0,
+      comments_count: post._count.comments,
       is_liked: false,
       created_at: post.createdAt.toISOString(),
       updated_at: post.updatedAt.toISOString(),
@@ -153,6 +156,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             displayName: true,
           },
         },
+        _count: {
+          select: { comments: { where: { deletedAt: null } } },
+        },
       },
     });
 
@@ -165,7 +171,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         display_name: updatedPost.author.displayName,
       },
       likes_count: 0,
-      comments_count: 0,
+      comments_count: updatedPost._count.comments,
       created_at: updatedPost.createdAt.toISOString(),
       updated_at: updatedPost.updatedAt.toISOString(),
     });

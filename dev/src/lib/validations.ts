@@ -116,6 +116,45 @@ export const listPostsQuerySchema = z.object({
 export type ListPostsQuery = z.infer<typeof listPostsQuerySchema>;
 
 /**
+ * Create comment request validation schema.
+ *
+ * Rules:
+ * - content: 1-500 chars after trimming, must not be empty/whitespace-only
+ */
+export const createCommentSchema = z.object({
+  content: z
+    .string({ required_error: "Content is required" })
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(1, "Content must not be empty")
+        .max(500, "Content must be at most 500 characters")
+    ),
+});
+
+export type CreateCommentInput = z.infer<typeof createCommentSchema>;
+
+/**
+ * List comments query validation schema.
+ *
+ * Rules:
+ * - cursor: optional string (comment ID for cursor-based pagination)
+ * - limit: optional number, 1-50, default 20
+ */
+export const listCommentsQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce
+    .number({ invalid_type_error: "Limit must be a number" })
+    .int("Limit must be an integer")
+    .min(1, "Limit must be at least 1")
+    .max(50, "Limit must be at most 50")
+    .default(20),
+});
+
+export type ListCommentsQuery = z.infer<typeof listCommentsQuerySchema>;
+
+/**
  * Validate registration input and return parsed data or error details.
  */
 export function validateRegisterInput(data: unknown):
@@ -217,6 +256,52 @@ export function validateListPostsQuery(data: unknown):
       details: Array<{ field: string; message: string }>;
     } {
   const result = listPostsQuerySchema.safeParse(data);
+
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const details = result.error.issues.map((issue) => ({
+    field: issue.path.join(".") || "unknown",
+    message: issue.message,
+  }));
+
+  return { success: false, details };
+}
+
+/**
+ * Validate create comment input and return parsed data or error details.
+ */
+export function validateCreateCommentInput(data: unknown):
+  | { success: true; data: CreateCommentInput }
+  | {
+      success: false;
+      details: Array<{ field: string; message: string }>;
+    } {
+  const result = createCommentSchema.safeParse(data);
+
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const details = result.error.issues.map((issue) => ({
+    field: issue.path.join(".") || "unknown",
+    message: issue.message,
+  }));
+
+  return { success: false, details };
+}
+
+/**
+ * Validate list comments query params and return parsed data or error details.
+ */
+export function validateListCommentsQuery(data: unknown):
+  | { success: true; data: ListCommentsQuery }
+  | {
+      success: false;
+      details: Array<{ field: string; message: string }>;
+    } {
+  const result = listCommentsQuerySchema.safeParse(data);
 
   if (result.success) {
     return { success: true, data: result.data };

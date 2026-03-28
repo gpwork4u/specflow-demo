@@ -96,6 +96,7 @@ describe("PATCH /api/v1/posts/:id", () => {
         content: "更新內容",
         updatedAt: new Date("2026-03-28T01:00:00.000Z"),
         author: MOCK_USER,
+        _count: { comments: 0 },
       };
       mockUpdate.mockResolvedValue(updatedPost);
 
@@ -126,6 +127,9 @@ describe("PATCH /api/v1/posts/:id", () => {
               username: true,
               displayName: true,
             },
+          },
+          _count: {
+            select: { comments: { where: { deletedAt: null } } },
           },
         },
       });
