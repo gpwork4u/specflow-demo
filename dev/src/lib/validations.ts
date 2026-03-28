@@ -76,6 +76,46 @@ export const createPostSchema = z.object({
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 
 /**
+ * Update post request validation schema.
+ *
+ * Rules:
+ * - content: 1-2000 chars after trimming, must not be empty/whitespace-only
+ *   (same rules as createPostSchema)
+ */
+export const updatePostSchema = z.object({
+  content: z
+    .string({ required_error: "Content is required" })
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(1, "Content must not be empty")
+        .max(2000, "Content must be at most 2000 characters")
+    ),
+});
+
+export type UpdatePostInput = z.infer<typeof updatePostSchema>;
+
+/**
+ * List posts query validation schema.
+ *
+ * Rules:
+ * - cursor: optional string (post ID for cursor-based pagination)
+ * - limit: optional number, 1-50, default 20
+ */
+export const listPostsQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce
+    .number({ invalid_type_error: "Limit must be a number" })
+    .int("Limit must be an integer")
+    .min(1, "Limit must be at least 1")
+    .max(50, "Limit must be at most 50")
+    .default(20),
+});
+
+export type ListPostsQuery = z.infer<typeof listPostsQuerySchema>;
+
+/**
  * Validate registration input and return parsed data or error details.
  */
 export function validateRegisterInput(data: unknown):
@@ -131,6 +171,52 @@ export function validateCreatePostInput(data: unknown):
       details: Array<{ field: string; message: string }>;
     } {
   const result = createPostSchema.safeParse(data);
+
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const details = result.error.issues.map((issue) => ({
+    field: issue.path.join(".") || "unknown",
+    message: issue.message,
+  }));
+
+  return { success: false, details };
+}
+
+/**
+ * Validate update post input and return parsed data or error details.
+ */
+export function validateUpdatePostInput(data: unknown):
+  | { success: true; data: UpdatePostInput }
+  | {
+      success: false;
+      details: Array<{ field: string; message: string }>;
+    } {
+  const result = updatePostSchema.safeParse(data);
+
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const details = result.error.issues.map((issue) => ({
+    field: issue.path.join(".") || "unknown",
+    message: issue.message,
+  }));
+
+  return { success: false, details };
+}
+
+/**
+ * Validate list posts query params and return parsed data or error details.
+ */
+export function validateListPostsQuery(data: unknown):
+  | { success: true; data: ListPostsQuery }
+  | {
+      success: false;
+      details: Array<{ field: string; message: string }>;
+    } {
+  const result = listPostsQuerySchema.safeParse(data);
 
   if (result.success) {
     return { success: true, data: result.data };
