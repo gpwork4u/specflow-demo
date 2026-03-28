@@ -5,7 +5,7 @@
  */
 
 import { api, extractTokenCookie } from './api';
-import { uniqueRegistration } from './fixtures';
+import { uniqueRegistration, uniquePostContent } from './fixtures';
 
 /**
  * 註冊一個新使用者並回傳 user 資訊和 token cookie
@@ -67,6 +67,47 @@ export async function login(email: string, password: string): Promise<{
     user: res.body,
     cookie: tokenCookie,
   };
+}
+
+// ============================================================
+// Post Helpers (Sprint 2)
+// ============================================================
+
+/**
+ * 建立一篇貼文並回傳 post 物件
+ * 用於需要「已存在貼文」的測試 scenario (GIVEN)
+ */
+export async function createPost(
+  cookie: string,
+  content?: string
+): Promise<any> {
+  const postContent = content || uniquePostContent();
+
+  const res = await api.post('/posts', { content: postContent }, { cookie });
+
+  if (res.status !== 201) {
+    throw new Error(
+      `Setup failed: create post returned ${res.status} — ${JSON.stringify(res.body)}`
+    );
+  }
+
+  return res.body;
+}
+
+/**
+ * 建立多篇貼文（用於分頁測試）
+ * 回傳所有建立的 post 物件（按建立順序）
+ */
+export async function createMultiplePosts(
+  cookie: string,
+  count: number
+): Promise<any[]> {
+  const posts: any[] = [];
+  for (let i = 0; i < count; i++) {
+    const post = await createPost(cookie, `Test post #${i + 1} - ${Date.now()}`);
+    posts.push(post);
+  }
+  return posts;
 }
 
 /**

@@ -66,4 +66,34 @@ export const errorCodes = {
   USERNAME_TAKEN: 'USERNAME_TAKEN',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  NOT_FOUND: 'NOT_FOUND',
 };
+
+// ============================================================
+// Post Fixtures (Sprint 2)
+// ============================================================
+
+/** 有效的貼文內容 */
+export const validPostContent = {
+  simple: 'Hello World!',
+  chinese: '今天天氣很好',
+  singleChar: 'a',
+  exactMax: 'a'.repeat(2000),
+};
+
+/** 無效的貼文內容 */
+export const invalidPostContent = {
+  empty: '',
+  whitespaceOnly: '   ',
+  tooLong: 'a'.repeat(2001),
+};
+
+/** 產生唯一的貼文內容 */
+export function uniquePostContent(prefix?: string): string {
+  const id = prefix || Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  return `Test post content ${id}`;
+}
+
+/** 更新後的貼文內容 */
+export const updatedPostContent = '更新內容';
