@@ -76,6 +76,27 @@ export const createPostSchema = z.object({
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 
 /**
+ * Update post request validation schema.
+ *
+ * Rules:
+ * - content: 1-2000 chars after trimming, must not be empty/whitespace-only
+ *   (same rules as createPostSchema)
+ */
+export const updatePostSchema = z.object({
+  content: z
+    .string({ required_error: "Content is required" })
+    .transform((val) => val.trim())
+    .pipe(
+      z
+        .string()
+        .min(1, "Content must not be empty")
+        .max(2000, "Content must be at most 2000 characters")
+    ),
+});
+
+export type UpdatePostInput = z.infer<typeof updatePostSchema>;
+
+/**
  * Validate registration input and return parsed data or error details.
  */
 export function validateRegisterInput(data: unknown):
@@ -131,6 +152,29 @@ export function validateCreatePostInput(data: unknown):
       details: Array<{ field: string; message: string }>;
     } {
   const result = createPostSchema.safeParse(data);
+
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const details = result.error.issues.map((issue) => ({
+    field: issue.path.join(".") || "unknown",
+    message: issue.message,
+  }));
+
+  return { success: false, details };
+}
+
+/**
+ * Validate update post input and return parsed data or error details.
+ */
+export function validateUpdatePostInput(data: unknown):
+  | { success: true; data: UpdatePostInput }
+  | {
+      success: false;
+      details: Array<{ field: string; message: string }>;
+    } {
+  const result = updatePostSchema.safeParse(data);
 
   if (result.success) {
     return { success: true, data: result.data };
