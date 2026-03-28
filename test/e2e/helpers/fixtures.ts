@@ -97,3 +97,21 @@ export function uniquePostContent(prefix?: string): string {
 
 /** 更新後的貼文內容 */
 export const updatedPostContent = '更新內容';
+
+// ============================================================
+// Comment Fixtures (Sprint 3)
+// ============================================================
+
+/** 有效的留言內容 */
+export const validCommentContent = {
+  simple: 'Great post!',
+  chinese: '很棒的文章！',
+  singleChar: 'a',
+  exactMax: 'a'.repeat(500),
+};
+
+/** 無效的留言內容 */
+export const invalidCommentContent = {
+  empty: '',
+  tooLong: 'a'.repeat(501),
+};

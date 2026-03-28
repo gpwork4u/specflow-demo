@@ -110,6 +110,55 @@ export async function createMultiplePosts(
   return posts;
 }
 
+// ============================================================
+// Interaction Helpers (Sprint 3)
+// ============================================================
+
+/**
+ * 對貼文按讚
+ * 用於需要「已按讚」的測試 scenario (GIVEN)
+ */
+export async function likePost(
+  cookie: string,
+  postId: string
+): Promise<any> {
+  const res = await api.post(`/posts/${postId}/likes`, {}, { cookie });
+
+  if (res.status !== 201) {
+    throw new Error(
+      `Setup failed: like post returned ${res.status} — ${JSON.stringify(res.body)}`
+    );
+  }
+
+  return res.body;
+}
+
+/**
+ * 建立一則留言並回傳 comment 物件
+ * 用於需要「已存在留言」的測試 scenario (GIVEN)
+ */
+export async function createComment(
+  cookie: string,
+  postId: string,
+  content?: string
+): Promise<any> {
+  const commentContent = content || `Test comment ${Date.now().toString(36)}`;
+
+  const res = await api.post(
+    `/posts/${postId}/comments`,
+    { content: commentContent },
+    { cookie }
+  );
+
+  if (res.status !== 201) {
+    throw new Error(
+      `Setup failed: create comment returned ${res.status} — ${JSON.stringify(res.body)}`
+    );
+  }
+
+  return res.body;
+}
+
 /**
  * 產生一個看起來像 JWT 但簽名無效的 token
  */
