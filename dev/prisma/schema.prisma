@@ -17,5 +17,22 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  posts Post[]
+
   @@map("users")
+}
+
+model Post {
+  id        String    @id @default(uuid())
+  content   String    @db.Text
+  authorId  String    @map("author_id")
+  author    User      @relation(fields: [authorId], references: [id])
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([authorId], map: "idx_post_author_id")
+  @@index([createdAt(sort: Desc)], map: "idx_post_created_at")
+  @@index([deletedAt], map: "idx_post_deleted_at")
+  @@map("posts")
 }
