@@ -38,6 +38,24 @@ export const registerSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 /**
+ * Login request validation schema.
+ *
+ * Rules:
+ * - email: valid format, required
+ * - password: non-empty string, required
+ */
+export const loginSchema = z.object({
+  email: z
+    .string({ required_error: "Email is required" })
+    .email("Invalid email format"),
+  password: z
+    .string({ required_error: "Password is required" })
+    .min(1, "Password is required"),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;
+
+/**
  * Validate registration input and return parsed data or error details.
  */
 export function validateRegisterInput(data: unknown):
@@ -47,6 +65,29 @@ export function validateRegisterInput(data: unknown):
       details: Array<{ field: string; message: string }>;
     } {
   const result = registerSchema.safeParse(data);
+
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  const details = result.error.issues.map((issue) => ({
+    field: issue.path.join(".") || "unknown",
+    message: issue.message,
+  }));
+
+  return { success: false, details };
+}
+
+/**
+ * Validate login input and return parsed data or error details.
+ */
+export function validateLoginInput(data: unknown):
+  | { success: true; data: LoginInput }
+  | {
+      success: false;
+      details: Array<{ field: string; message: string }>;
+    } {
+  const result = loginSchema.safeParse(data);
 
   if (result.success) {
     return { success: true, data: result.data };
