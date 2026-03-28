@@ -1,12 +1,16 @@
 {
   "name": "specflow-demo-e2e-tests",
   "version": "1.0.0",
-  "description": "Sprint 1 E2E tests for auth features",
+  "description": "E2E tests for auth and post features",
   "scripts": {
     "test": "jest --verbose",
     "test:register": "jest --verbose auth-register",
     "test:login": "jest --verbose auth-login",
-    "test:session": "jest --verbose auth-session"
+    "test:session": "jest --verbose auth-session",
+    "test:posts-create": "jest --verbose posts-create",
+    "test:posts-list": "jest --verbose posts-list",
+    "test:posts-edit-delete": "jest --verbose posts-edit-delete",
+    "test:posts": "jest --verbose posts-"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
