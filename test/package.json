@@ -1,7 +1,7 @@
 {
   "name": "specflow-demo-e2e-tests",
   "version": "1.0.0",
-  "description": "E2E tests for auth and post features",
+  "description": "E2E tests for auth, post, and interaction features",
   "scripts": {
     "test": "jest --verbose",
     "test:register": "jest --verbose auth-register",
@@ -10,7 +10,11 @@
     "test:posts-create": "jest --verbose posts-create",
     "test:posts-list": "jest --verbose posts-list",
     "test:posts-edit-delete": "jest --verbose posts-edit-delete",
-    "test:posts": "jest --verbose posts-"
+    "test:posts": "jest --verbose posts-",
+    "test:likes": "jest --verbose likes",
+    "test:comments": "jest --verbose comments",
+    "test:user-profile": "jest --verbose user-profile",
+    "test:sprint3": "jest --verbose likes comments user-profile"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
